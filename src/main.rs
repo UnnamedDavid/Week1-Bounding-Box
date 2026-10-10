@@ -1,18 +1,6 @@
-use core::f64;
-
+mod data;
 fn main() {
-    let stroke: [(f64, f64); 8] = [
-        (10.5, 100.2),
-        (12.0, 102.5),
-        (15.2, 107.0),
-        (22.1, 115.4),
-        (35.0, 120.0),
-        (48.3, 119.2),
-        (50.1, 110.0),
-        (49.0, 95.5),
-    ];
-
-    let bbox = find_bounding_box(&stroke);
+    let bbox = find_bounding_box(&data::STROKE);
     println!("{bbox:#?}")
 }
 
