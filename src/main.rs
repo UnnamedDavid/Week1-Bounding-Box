@@ -1,27 +1,30 @@
 mod data;
 fn main() {
-    let test_stroke = Stroke {
-        points: vec![
-            (10.5, 100.2),
-            (12.0, 102.5),
-            (15.2, 107.0),
-            (22.1, 115.4),
-            (35.0, 120.0),
-            (48.3, 119.2),
-            (50.1, 110.0),
-            (49.0, 95.5),
-        ],
-    };
+    let test_stroke = Stroke::new(vec![
+        (10.5, 100.2),
+        (12.0, 102.5),
+        (15.2, 107.0),
+        (22.1, 115.4),
+        (35.0, 120.0),
+        (48.3, 119.2),
+        (50.1, 110.0),
+        (49.0, 95.5),
+    ]);
 
     let bbox = test_stroke.find_bounding_box();
     println!("{bbox:#?}")
 }
 
+#[derive(Debug, Clone)]
 pub struct Stroke {
-    points: Vec<(f64, f64)>,
+    pub points: Vec<(f64, f64)>,
 }
 
 impl Stroke {
+    // Contructor
+    pub fn new(points: Vec<(f64, f64)>) -> Self {
+        Self { points }
+    }
     // Finds the bounding box of the stroke of line, that is, the smallest box
     // that encloses the stroke.
     fn find_bounding_box(&self) -> ((f64, f64), (f64, f64)) {
