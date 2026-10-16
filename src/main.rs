@@ -1,4 +1,6 @@
-mod data;
+use serde::Deserialize;
+use std::fs;
+
 fn main() {
     let test_stroke = Stroke::new(vec![
         (10.5, 100.2),
@@ -15,7 +17,7 @@ fn main() {
     println!("{bbox:#?}")
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct Stroke {
     pub points: Vec<(f64, f64)>,
 }
@@ -24,6 +26,12 @@ impl Stroke {
     // Contructor
     pub fn new(points: Vec<(f64, f64)>) -> Self {
         Self { points }
+    }
+
+    // From Json
+    pub fn from_json_file(path: &str) -> Self {
+        let content = fs::read_to_string(path).expect("Could not read json file");
+        serde_json::from_str(&content).expect("Json file is not well-formatted")
     }
     // Finds the bounding box of the stroke of line, that is, the smallest box
     // that encloses the stroke.
