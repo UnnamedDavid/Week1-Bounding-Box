@@ -1,23 +1,31 @@
 use serde::Deserialize;
+use serde::Serialize;
 use std::fs;
 
 fn main() {
-    let test_stroke = Stroke::new(vec![
-        (10.5, 100.2),
-        (12.0, 102.5),
-        (15.2, 107.0),
-        (22.1, 115.4),
-        (35.0, 120.0),
-        (48.3, 119.2),
-        (50.1, 110.0),
-        (49.0, 95.5),
-    ]);
+    let this_canvas = Canvas::from_json_file("src/canvas.json");
 
-    let bbox = test_stroke.find_bounding_box();
-    println!("{bbox:#?}")
+    // let bbox = this_canvas.find_bounding_box();
+    // println!("{bbox:#?}")
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Canvas {
+    pub strokes: Vec<Stroke>,
+}
+
+impl Canvas {
+    // From Json
+    pub fn from_json_file(path: &str) -> Self {
+        let content = fs::read_to_string(path).expect("Could not read json file");
+        serde_json::from_str(&content).expect("Json file is not well-formatted")
+    }
+
+    // TO DO
+    fn total_bounding_box(&self) {}
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Stroke {
     pub points: Vec<(f64, f64)>,
 }
@@ -28,11 +36,6 @@ impl Stroke {
         Self { points }
     }
 
-    // From Json
-    pub fn from_json_file(path: &str) -> Self {
-        let content = fs::read_to_string(path).expect("Could not read json file");
-        serde_json::from_str(&content).expect("Json file is not well-formatted")
-    }
     // Finds the bounding box of the stroke of line, that is, the smallest box
     // that encloses the stroke.
     fn find_bounding_box(&self) -> ((f64, f64), (f64, f64)) {
