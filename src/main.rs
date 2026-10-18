@@ -18,6 +18,7 @@ pub struct Canvas {
     pub strokes: Vec<Stroke>,
 }
 
+// A canvas holds many strokes
 impl Canvas {
     // From Json
     pub fn from_json_file(path: &str) -> Self {
@@ -26,26 +27,24 @@ impl Canvas {
     }
 
     // Find the bounding box that encloses all the strokes on the canvas
-    fn overall_bounding_box(&self) -> ((f64, f64), (f64, f64)) {
-        let mut total_min_x: f64 = f64::INFINITY;
-        let mut total_min_y: f64 = f64::INFINITY;
-        let mut total_max_x: f64 = f64::NEG_INFINITY;
-        let mut total_max_y: f64 = f64::NEG_INFINITY;
+    fn overall_bounding_box(&self) -> BoundingBox {
+        let mut result = BoundingBox {
+            min_x: f64::INFINITY,
+            min_y: f64::INFINITY,
+            max_x: f64::NEG_INFINITY,
+            max_y: f64::NEG_INFINITY,
+        };
 
         for stroke in &self.strokes {
-            let ((min_x, min_y), (max_x, max_y)) = stroke.find_bounding_box();
-            total_min_x = total_min_x.min(min_x);
-            total_min_y = total_min_y.min(min_y);
-            total_max_x = total_max_x.max(max_x);
-            total_max_y = total_max_y.max(max_y);
+            result = result.join(stroke.find_bounding_box());
         }
 
-        ((total_min_x, total_min_y), (total_max_x, total_max_y))
+        result
     }
 
     // Find bounding box for each of the strokes on the canvas at once
-    fn each_bounding_box(&self) -> Vec<((f64, f64), (f64, f64))> {
-        let mut result: Vec<((f64, f64), (f64, f64))> = Vec::new();
+    fn each_bounding_box(&self) -> Vec<BoundingBox> {
+        let mut result: Vec<BoundingBox> = Vec::new();
         for stroke in &self.strokes {
             result.push(stroke.find_bounding_box());
         }
@@ -58,6 +57,7 @@ pub struct Stroke {
     pub points: Vec<(f64, f64)>,
 }
 
+// A stroke is a vector of points, meaning a 'stroke' of line
 impl Stroke {
     // Contructor
     pub fn new(points: Vec<(f64, f64)>) -> Self {
@@ -66,7 +66,7 @@ impl Stroke {
 
     // Finds the bounding box of the stroke of line, that is, the smallest box
     // that encloses the stroke.
-    fn find_bounding_box(&self) -> ((f64, f64), (f64, f64)) {
+    fn find_bounding_box(&self) -> BoundingBox {
         let mut min_x: f64 = f64::INFINITY;
         let mut min_y: f64 = f64::INFINITY;
         let mut max_x: f64 = f64::NEG_INFINITY;
@@ -77,6 +77,31 @@ impl Stroke {
             max_x = max_x.max(x);
             max_y = max_y.max(y);
         }
-        ((min_x, min_y), (max_x, max_y))
+
+        BoundingBox {
+            min_x: min_x,
+            min_y: min_y,
+            max_x: max_x,
+            max_y: max_y,
+        }
+    }
+}
+
+#[derive(Debug)]
+struct BoundingBox {
+    pub min_x: f64,
+    pub min_y: f64,
+    pub max_x: f64,
+    pub max_y: f64,
+}
+
+impl BoundingBox {
+    fn join(&self, other: BoundingBox) -> BoundingBox {
+        BoundingBox {
+            min_x: self.min_x.min(other.min_x),
+            min_y: self.min_y.min(other.min_y),
+            max_x: self.max_x.max(other.max_x),
+            max_y: self.max_y.max(other.max_y),
+        }
     }
 }
