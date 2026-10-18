@@ -27,24 +27,26 @@ impl Canvas {
     }
 
     // Find the bounding box that encloses all the strokes on the canvas
-    fn overall_bounding_box(&self) -> BoundingBox {
-        let mut result = BoundingBox {
-            min_x: f64::INFINITY,
-            min_y: f64::INFINITY,
-            max_x: f64::NEG_INFINITY,
-            max_y: f64::NEG_INFINITY,
-        };
+    fn overall_bounding_box(&self) -> Option<BoundingBox> {
+        let mut result: Option<BoundingBox> = None;
 
+        // Evaluates the overall bounding box only when the strokes have valid points
         for stroke in &self.strokes {
-            result = result.join(stroke.find_bounding_box());
+            if let Some(current_bbox) = stroke.find_bounding_box() {
+                result = match result {
+                    Some(existing) => Some(existing.join(current_bbox)),
+                    None => Some(current_bbox),
+                };
+            }
         }
 
+        // If all the strokes are empty, None will be returned
         result
     }
 
     // Find bounding box for each of the strokes on the canvas at once
-    fn each_bounding_box(&self) -> Vec<BoundingBox> {
-        let mut result: Vec<BoundingBox> = Vec::new();
+    fn each_bounding_box(&self) -> Vec<Option<BoundingBox>> {
+        let mut result: Vec<Option<BoundingBox>> = Vec::new();
         for stroke in &self.strokes {
             result.push(stroke.find_bounding_box());
         }
@@ -66,11 +68,17 @@ impl Stroke {
 
     // Finds the bounding box of the stroke of line, that is, the smallest box
     // that encloses the stroke.
-    fn find_bounding_box(&self) -> BoundingBox {
+    fn find_bounding_box(&self) -> Option<BoundingBox> {
+        // immediately returns empty if the stroke has no points
+        if self.points.is_empty() {
+            return None;
+        }
+
         let mut min_x: f64 = f64::INFINITY;
         let mut min_y: f64 = f64::INFINITY;
         let mut max_x: f64 = f64::NEG_INFINITY;
         let mut max_y: f64 = f64::NEG_INFINITY;
+
         for &(x, y) in &self.points {
             min_x = min_x.min(x);
             min_y = min_y.min(y);
@@ -78,12 +86,12 @@ impl Stroke {
             max_y = max_y.max(y);
         }
 
-        BoundingBox {
+        Some(BoundingBox {
             min_x: min_x,
             min_y: min_y,
             max_x: max_x,
             max_y: max_y,
-        }
+        })
     }
 }
 
