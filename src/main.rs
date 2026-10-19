@@ -2,6 +2,7 @@ use serde::Deserialize;
 use serde::Serialize;
 use std::env;
 use std::fs;
+use std::io::{self, Write};
 
 fn main() {
     // Reads a file path if the user provides one e.g. `cargo run -- custom.json`,
@@ -18,6 +19,12 @@ fn main() {
     println!(
         "For each stroke on the canvas, the bounding box is {bbox_each:#?}, for the total canvas, the bounding box is {bbox_total:#?}"
     );
+
+    // Wait until user to press enter to exit program so user can see the output
+    println!("\nPress Enter to exit...");
+    let _ = io::stdout().flush();
+    let mut pause = String::new();
+    let _ = io::stdin().read_line(&mut pause);
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
