@@ -28,29 +28,20 @@ impl Canvas {
 
     // Find the bounding box that encloses all the strokes on the canvas
     fn overall_bounding_box(&self) -> Option<BoundingBox> {
-        let mut result: Option<BoundingBox> = None;
-
-        // Evaluates the overall bounding box only when the strokes have valid points
-        for stroke in &self.strokes {
-            if let Some(current_bbox) = stroke.find_bounding_box() {
-                result = match result {
-                    Some(existing) => Some(existing.join(current_bbox)),
-                    None => Some(current_bbox),
-                };
-            }
-        }
-
         // If all the strokes are empty, None will be returned
-        result
+        self.strokes
+            .iter()
+            // Evaluates the bounding box only when the strokes have valid points, ie, not None
+            .filter_map(|stroke| stroke.find_bounding_box())
+            .reduce(|acc, e| acc.join(e))
     }
 
     // Find bounding box for each of the strokes on the canvas at once
     fn each_bounding_box(&self) -> Vec<Option<BoundingBox>> {
-        let mut result: Vec<Option<BoundingBox>> = Vec::new();
-        for stroke in &self.strokes {
-            result.push(stroke.find_bounding_box());
-        }
-        result
+        self.strokes
+            .iter()
+            .map(|stroke| stroke.find_bounding_box())
+            .collect()
     }
 }
 
@@ -69,32 +60,14 @@ impl Stroke {
     // Finds the bounding box of the stroke of line, that is, the smallest box
     // that encloses the stroke.
     fn find_bounding_box(&self) -> Option<BoundingBox> {
-        // immediately returns empty if the stroke has no points
-        if self.points.is_empty() {
-            return None;
-        }
-
-        let mut min_x: f64 = f64::INFINITY;
-        let mut min_y: f64 = f64::INFINITY;
-        let mut max_x: f64 = f64::NEG_INFINITY;
-        let mut max_y: f64 = f64::NEG_INFINITY;
-
-        for &(x, y) in &self.points {
-            min_x = min_x.min(x);
-            min_y = min_y.min(y);
-            max_x = max_x.max(x);
-            max_y = max_y.max(y);
-        }
-
-        Some(BoundingBox {
-            min_x: min_x,
-            min_y: min_y,
-            max_x: max_x,
-            max_y: max_y,
-        })
+        self.points
+            .iter()
+            .map(|&(x, y)| BoundingBox::from_point(x, y))
+            .reduce(|acc, e| acc.join(e))
     }
 }
 
+// A bounding box
 #[derive(Debug)]
 struct BoundingBox {
     pub min_x: f64,
@@ -104,6 +77,16 @@ struct BoundingBox {
 }
 
 impl BoundingBox {
+    // Creates a bounding box using a single point, useful for the find bounding box function
+    pub fn from_point(x: f64, y: f64) -> Self {
+        BoundingBox {
+            min_x: x,
+            min_y: y,
+            max_x: x,
+            max_y: y,
+        }
+    }
+    // Find the bounding box of two bounding boxes
     fn join(&self, other: BoundingBox) -> BoundingBox {
         BoundingBox {
             min_x: self.min_x.min(other.min_x),
